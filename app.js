@@ -218,6 +218,39 @@ const ENCOURAGEMENTS = [
     }
 ];
 
+const BIBLE_REFERENCES = [
+    { book: "John", chapter: 3, verse: 16 },
+    { book: "Psalm", chapter: 23, verse: 1 },
+    { book: "Proverbs", chapter: 3, verse: 5 },
+    { book: "Philippians", chapter: 4, verse: 13 },
+    { book: "Romans", chapter: 8, verse: 28 },
+    { book: "Jeremiah", chapter: 29, verse: 11 },
+    { book: "Psalm", chapter: 27, verse: 1 },
+    { book: "Psalm", chapter: 119, verse: 105 },
+    { book: "Isaiah", chapter: 40, verse: 31 },
+    { book: "Joshua", chapter: 1, verse: 9 },
+    { book: "Psalm", chapter: 34, verse: 18 },
+    { book: "2 Corinthians", chapter: 5, verse: 17 },
+    { book: "Matthew", chapter: 6, verse: 33 },
+    { book: "Psalm", chapter: 46, verse: 10 },
+    { book: "Psalm", chapter: 103, verse: 1 },
+    { book: "1 Corinthians", chapter: 13, verse: 1 },
+    { book: "Colossians", chapter: 3, verse: 12 },
+    { book: "Philippians", chapter: 4, verse: 6 },
+    { book: "Psalm", chapter: 121, verse: 1 },
+    { book: "Genesis", chapter: 1, verse: 1 },
+    { book: "Psalm", chapter: 1, verse: 1 },
+    { book: "Psalm", chapter: 19, verse: 14 },
+    { book: "Psalm", chapter: 51, verse: 10 },
+    { book: "Psalm", chapter: 139, verse: 23 },
+    { book: "Proverbs", chapter: 16, verse: 3 },
+    { book: "Exodus", chapter: 14, verse: 14 },
+    { book: "Psalm", chapter: 91, verse: 1 },
+    { book: "Psalm", chapter: 100, verse: 1 },
+    { book: "Psalm", chapter: 150, verse: 6 },
+    { book: "1 John", chapter: 4, verse: 19 },
+];
+
 const THEMES = ["sepia", "dark", ""];
 const THEME_ICONS = { sepia: "🕯️", dark: "🌙", "": "☀️" };
 
@@ -233,6 +266,8 @@ let streak = 0;
 let soundEnabled = true;
 let currentDifficulty = "MEDIUM";
 let currentTranslation = "ALL";
+let isCustomMode = false;
+let isFetching = false;
 
 function saveState() {
     try {
@@ -293,6 +328,11 @@ const blessingRefEl = document.getElementById("blessingRef");
 const tryAgainBtnEl = document.getElementById("tryAgainBtn");
 const newVerseBtnEl = document.getElementById("newVerseBtn");
 const appContainerEl = document.querySelector(".app-container");
+const customToggleBtnEl = document.getElementById("customToggleBtn");
+const customVerseSectionEl = document.getElementById("customVerseSection");
+const customVerseInputEl = document.getElementById("customVerseInput");
+const fetchRandomBtnEl = document.getElementById("fetchRandomBtn");
+const startCustomBtnEl = document.getElementById("startCustomBtn");
 
 function initAudio() {
     if (!audioCtx) {
@@ -423,6 +463,55 @@ function playStampSound() {
     } catch(e) {}
 }
 
+function setLoading(isLoading) {
+    if (isLoading) {
+        verseContentEl.className = "verse-content loading";
+        verseContentEl.innerHTML = `
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>
+            <div class="skeleton-line"></div>`;
+        verseReferenceEl.innerHTML = `<span>— Loading</span>`;
+    } else {
+        verseContentEl.classList.remove("loading");
+    }
+}
+
+async function fetchRandomVerse() {
+    if (isFetching) return;
+    isFetching = true;
+    fetchRandomBtnEl.disabled = true;
+    fetchRandomBtnEl.innerHTML = `<span class="spinner"></span> Fetching...`;
+
+    const ref = BIBLE_REFERENCES[Math.floor(Math.random() * BIBLE_REFERENCES.length)];
+    const query = `${ref.book.replace(/ /g, "+")}+${ref.chapter}:${ref.verse}`;
+
+    try {
+        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`);
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        const text = data.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        const verse = {
+            text,
+            reference: data.reference || `${ref.book} ${ref.chapter}:${ref.verse}`,
+            translation: "KJV",
+            difficulty: text.length < 100 ? "EASY" : text.length < 300 ? "MEDIUM" : "HARD"
+        };
+        BIBLE_VERSES.push(verse);
+        setLoading(false);
+        loadVerse(verse);
+    } catch (e) {
+        fetchRandomBtnEl.textContent = "📖 Fetch Failed — Try Again";
+        setTimeout(() => {
+            fetchRandomBtnEl.textContent = "📖 Fetch Random";
+        }, 2000);
+        setLoading(false);
+        loadVerse();
+    } finally {
+        isFetching = false;
+        fetchRandomBtnEl.disabled = false;
+    }
+}
+
 function getFilteredVerse() {
     let filtered = BIBLE_VERSES.filter(v => v.difficulty === currentDifficulty);
 
@@ -458,6 +547,8 @@ function loadVerse(selectedVerse = null) {
     liveWpmEl.textContent = "0";
     liveAccuracyEl.innerHTML = `100<span class="stat-unit">%</span>`;
     liveTimerEl.textContent = "0:00";
+
+    customVerseSectionEl.classList.remove("visible");
 
     currentVerse = selectedVerse || getFilteredVerse();
     currentVerseChars = currentVerse.text.split("");
@@ -564,6 +655,11 @@ function updateStreakDisplay() {
 typingInputEl.addEventListener("input", (e) => {
     const inputVal = typingInputEl.value;
 
+    if (!currentVerseChars || currentVerseChars.length === 0) {
+        typingInputEl.value = "";
+        return;
+    }
+
     if (!isPlaying && inputVal.length > 0) {
         startRaceTimer();
     }
@@ -658,6 +754,42 @@ themeBtnEl.addEventListener("click", () => {
     document.documentElement.setAttribute("data-theme", next);
     themeBtnEl.textContent = THEME_ICONS[next] || "☀️";
     saveState();
+    typingInputEl.focus();
+});
+
+customToggleBtnEl.addEventListener("click", () => {
+    customVerseSectionEl.classList.toggle("visible");
+    if (customVerseSectionEl.classList.contains("visible")) {
+        customVerseInputEl.focus();
+    } else {
+        typingInputEl.focus();
+    }
+});
+
+fetchRandomBtnEl.addEventListener("click", () => {
+    customVerseSectionEl.classList.remove("visible");
+    setLoading(true);
+    fetchRandomVerse();
+});
+
+startCustomBtnEl.addEventListener("click", () => {
+    const text = customVerseInputEl.value.trim();
+    if (!text) {
+        customVerseInputEl.focus();
+        customVerseInputEl.style.borderColor = "var(--deep-red)";
+        setTimeout(() => {
+            customVerseInputEl.style.borderColor = "";
+        }, 1000);
+        return;
+    }
+    customVerseSectionEl.classList.remove("visible");
+    const customVerse = {
+        text,
+        reference: "Custom Verse",
+        translation: "CUSTOM",
+        difficulty: text.length < 100 ? "EASY" : text.length < 300 ? "MEDIUM" : "HARD"
+    };
+    loadVerse(customVerse);
     typingInputEl.focus();
 });
 

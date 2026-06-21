@@ -1027,3 +1027,122 @@ footer svg {
     height: 14px;
     fill: var(--ink-light);
 }
+
+/* Loading skeleton */
+.verse-content.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 80%;
+}
+
+.verse-content.loading .skeleton-line {
+    height: 1.4rem;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--parchment-dark) 25%, var(--parchment-light) 50%, var(--parchment-dark) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.verse-content.loading .skeleton-line:nth-child(1) { width: 85%; }
+.verse-content.loading .skeleton-line:nth-child(2) { width: 70%; }
+.verse-content.loading .skeleton-line:nth-child(3) { width: 60%; }
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Custom verse section */
+.custom-verse-section {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.custom-verse-section.visible {
+    display: flex;
+}
+
+.custom-verse-section textarea {
+    width: 100%;
+    max-width: 700px;
+    min-height: 120px;
+    padding: 16px 20px;
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--ink-dark);
+    background: var(--parchment-base);
+    border: 2px solid var(--leather-brown);
+    border-radius: 6px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.custom-verse-section textarea:focus {
+    border-color: var(--gold-accent);
+    box-shadow: 0 0 8px rgba(191, 161, 95, 0.3);
+}
+
+.custom-verse-section textarea::placeholder {
+    color: var(--ink-light);
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.custom-actions {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 700px;
+    justify-content: flex-end;
+}
+
+.fetch-btn {
+    background: var(--parchment-base);
+    border: 2px solid var(--leather-brown);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-family: var(--font-headings);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--leather-brown);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.fetch-btn:hover {
+    color: var(--leather-dark);
+    border-color: var(--leather-dark);
+    transform: translateY(-1px);
+}
+
+.fetch-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.fetch-btn .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--leather-brown);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
