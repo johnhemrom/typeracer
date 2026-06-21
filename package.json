@@ -1,0 +1,25 @@
+{
+  "name": "typeracer",
+  "version": "1.0.0",
+  "description": "Scripture Racer - Bible verse typing game",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnhemrom/typeracer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/johnhemrom/typeracer/issues"
+  },
+  "homepage": "https://github.com/johnhemrom/typeracer#readme",
+  "devDependencies": {
+    "vite": "^6.4.3"
+  }
+}
