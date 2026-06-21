@@ -38,6 +38,41 @@
             --font-mono: 'Courier New', Courier, monospace;
         }
 
+        [data-theme="sepia"] :root,
+        [data-theme="sepia"] body {
+            --parchment-light: #F7EBD3;
+            --parchment-base: #F3E5C8;
+            --parchment-dark: #E6D4B0;
+            --parchment-shadow: #CBB993;
+            --ink-dark: #1C1008;
+            --ink-medium: #3E2916;
+            --ink-light: #6D523B;
+            --leather-brown: #7B4F2E;
+            --leather-dark: #4A2C0A;
+        }
+
+        [data-theme="dark"] :root,
+        [data-theme="dark"] body {
+            --parchment-light: #2A2018;
+            --parchment-base: #1E1510;
+            --parchment-dark: #16100C;
+            --parchment-shadow: #0D0907;
+            --ink-dark: #E8D5A3;
+            --ink-medium: #C9B68A;
+            --ink-light: #A8946E;
+            --leather-brown: #8B6B4A;
+            --leather-dark: #C9A87C;
+        }
+
+        [data-theme="dark"] body {
+            background-color: #16100C;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         /* Ambient parchment scroll background */
         * {
             box-sizing: border-box;
@@ -208,6 +243,29 @@
             top: 17px;
             left: 6px;
             box-shadow: 0 0 2px white;
+        }
+
+        .theme-btn {
+            background: var(--parchment-base);
+            border: 2px solid var(--leather-brown);
+            color: var(--leather-brown);
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        .theme-btn:hover {
+            color: var(--leather-dark);
+            border-color: var(--leather-dark);
+            transform: translateY(-1px);
         }
 
         /* Logo and Slogan styling */
@@ -1064,6 +1122,9 @@
                     </svg>
                 </button>
 
+                <!-- Theme Toggle -->
+                <button id="themeBtn" class="theme-btn" title="Toggle theme (Sepia / Dark / Light)">🕯️</button>
+
                 <!-- Translation Filter Dropdown -->
                 <div class="select-wrapper">
                     <select id="translationFilter" title="Filter Bible Translation Collection">
@@ -1454,6 +1515,10 @@
             }
         ];
 
+        // Theme constants
+        const THEMES = ["sepia", "dark", ""];
+        const THEME_ICONS = { sepia: "🕯️", dark: "🌙", "": "☀️" };
+
         // ----------------------------------------------------
         // GAME STATE STATE VARIABLES
         // ----------------------------------------------------
@@ -1462,13 +1527,49 @@
         let typedIndex = 0;
         let errors = 0;
         let totalKeystrokes = 0;
-        let timerInterval = null;
+        let timerRAF = null;
         let startTime = null;
         let isPlaying = false;
         let streak = 0;
         let soundEnabled = true;
         let currentDifficulty = "MEDIUM";
         let currentTranslation = "ALL";
+
+        // ----------------------------------------------------
+        // STATE PERSISTENCE (localStorage)
+        // ----------------------------------------------------
+        function saveState() {
+            try {
+                localStorage.setItem("tr_streak", streak);
+                localStorage.setItem("tr_difficulty", currentDifficulty);
+                localStorage.setItem("tr_translation", currentTranslation);
+                localStorage.setItem("tr_sound", soundEnabled ? "1" : "0");
+                localStorage.setItem("tr_theme", document.documentElement.getAttribute("data-theme") || "");
+            } catch (e) {}
+        }
+
+        function loadState() {
+            try {
+                const s = localStorage.getItem("tr_streak");
+                if (s !== null) streak = parseInt(s, 10) || 0;
+
+                const d = localStorage.getItem("tr_difficulty");
+                if (d !== null && ["EASY", "MEDIUM", "HARD"].includes(d)) {
+                    currentDifficulty = d;
+                }
+
+                const t = localStorage.getItem("tr_translation");
+                if (t !== null && ["ALL", "KJV", "NIV", "ESV"].includes(t)) {
+                    currentTranslation = t;
+                }
+
+                const so = localStorage.getItem("tr_sound");
+                if (so !== null) soundEnabled = so === "1";
+
+                const th = localStorage.getItem("tr_theme");
+                if (th) document.documentElement.setAttribute("data-theme", th);
+            } catch (e) {}
+        }
 
         // Web Audio Context (lazy load on first keypress or interaction)
         let audioCtx = null;
@@ -1486,6 +1587,7 @@
         const streakBadgeEl = document.getElementById("streakBadge");
         const streakTextEl = document.getElementById("streakText");
         const soundBtnEl = document.getElementById("soundBtn");
+        const themeBtnEl = document.getElementById("themeBtn");
         const translationFilterEl = document.getElementById("translationFilter");
         const parchmentCardEl = document.getElementById("parchmentCard");
         const scrollInputContainerEl = document.getElementById("scrollInputContainer");
@@ -1670,7 +1772,8 @@
                 }, 50);
             }
 
-            clearInterval(timerInterval);
+            if (timerRAF) cancelAnimationFrame(timerRAF);
+            timerRAF = null;
             isPlaying = false;
             startTime = null;
             typedIndex = 0;
@@ -1701,29 +1804,28 @@
             verseReferenceEl.innerHTML = `— ${currentVerse.reference} <span class="translation-badge">[${currentVerse.translation}]</span>`;
         }
 
-        // Start the typing practice timer
+        // Start the typing practice timer (Date.now-based, no drift)
         function startRaceTimer() {
             isPlaying = true;
-            startTime = new Date();
-            
-            timerInterval = setInterval(() => {
-                const now = new Date();
-                const diffSeconds = Math.floor((now - startTime) / 1000);
-                const minutes = Math.floor(diffSeconds / 60);
-                const seconds = diffSeconds % 60;
-                
-                liveTimerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Update live WPM also
-                updateLiveStats();
-            }, 1000);
+            startTime = Date.now();
+            tick();
+        }
+
+        function tick() {
+            if (!isPlaying) return;
+            const elapsed = Date.now() - startTime;
+            const diffSeconds = Math.floor(elapsed / 1000);
+            const minutes = Math.floor(diffSeconds / 60);
+            const seconds = diffSeconds % 60;
+            liveTimerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            updateLiveStats();
+            timerRAF = requestAnimationFrame(tick);
         }
 
         // Real-time calculation of speed & accuracy
         function updateLiveStats() {
             if (!startTime) return;
-            const now = new Date();
-            const elapsedMinutes = (now - startTime) / 1000 / 60;
+            const elapsedMinutes = (Date.now() - startTime) / 1000 / 60;
             
             // Standard typing rate: 5 characters = 1 word
             let wpm = 0;
@@ -1747,17 +1849,19 @@
 
         // Completion mechanics
         function completeVerse() {
-            clearInterval(timerInterval);
+            if (timerRAF) cancelAnimationFrame(timerRAF);
+            timerRAF = null;
             isPlaying = false;
             playBellSound();
 
-            const finalTimeSeconds = Math.max(1, Math.floor((new Date() - startTime) / 1000));
+            const finalTimeSeconds = Math.max(1, Math.floor((Date.now() - startTime) / 1000));
             const finalWpm = Math.round((typedIndex / 5) / (finalTimeSeconds / 60));
             const finalAccuracy = totalKeystrokes > 0 ? Math.round(((totalKeystrokes - errors) / totalKeystrokes) * 100) : 100;
 
             // Increment streak
             streak++;
             updateStreakDisplay();
+            saveState();
 
             // Populate Modal details
             modalWpmEl.textContent = finalWpm;
@@ -1871,8 +1975,9 @@
         document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
             radio.addEventListener("change", (e) => {
                 currentDifficulty = e.target.value;
-                streak = 0; // reset streak on difficulty modification
+                streak = 0;
                 updateStreakDisplay();
+                saveState();
                 loadVerse();
                 typingInputEl.focus();
             });
@@ -1881,8 +1986,9 @@
         // Translation dropdown filters
         translationFilterEl.addEventListener("change", (e) => {
             currentTranslation = e.target.value;
-            streak = 0; // reset streak on filter change
+            streak = 0;
             updateStreakDisplay();
+            saveState();
             loadVerse();
             typingInputEl.focus();
         });
@@ -1893,12 +1999,23 @@
             if (soundEnabled) {
                 soundBtnEl.classList.remove("muted");
                 soundBtnEl.title = "Mute clicking sounds";
-                // Quick feedback sound
                 playKeySound();
             } else {
                 soundBtnEl.classList.add("muted");
                 soundBtnEl.title = "Unmute clicking sounds";
             }
+            saveState();
+            typingInputEl.focus();
+        });
+
+        // Theme toggle button
+        themeBtnEl.addEventListener("click", () => {
+            const current = document.documentElement.getAttribute("data-theme") || "";
+            const idx = THEMES.indexOf(current);
+            const next = THEMES[(idx + 1) % THEMES.length];
+            document.documentElement.setAttribute("data-theme", next);
+            themeBtnEl.textContent = THEME_ICONS[next] || "☀️";
+            saveState();
             typingInputEl.focus();
         });
 
@@ -1937,8 +2054,29 @@
         // INITIALIZATION
         // ----------------------------------------------------
         window.onload = () => {
+            loadState();
+
+            // Restore difficulty radio
+            const diffRadio = document.querySelector(`input[name="difficulty"][value="${currentDifficulty}"]`);
+            if (diffRadio) diffRadio.checked = true;
+
+            // Restore translation select
+            translationFilterEl.value = currentTranslation;
+
+            // Restore sound button state
+            if (!soundEnabled) {
+                soundBtnEl.classList.add("muted");
+                soundBtnEl.title = "Unmute clicking sounds";
+            }
+
+            // Restore theme button icon
+            const currentTheme = document.documentElement.getAttribute("data-theme") || "";
+            themeBtnEl.textContent = THEME_ICONS[currentTheme] || "☀️";
+
+            // Restore streak display
+            updateStreakDisplay();
+
             loadVerse();
-            // Focus typing field on load
             typingInputEl.focus();
         };
 
