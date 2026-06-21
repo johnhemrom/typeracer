@@ -615,6 +615,8 @@ function completeVerse() {
     const finalWpm = Math.round((typedIndex / 5) / (finalTimeSeconds / 60));
     const finalAccuracy = totalKeystrokes > 0 ? Math.round(((totalKeystrokes - errors) / totalKeystrokes) * 100) : 100;
 
+    addHighScore(currentDifficulty, finalWpm, Math.max(0, finalAccuracy), currentVerse?.reference || "Custom" );
+
     streak++;
     updateStreakDisplay();
     saveState();
@@ -793,6 +795,76 @@ startCustomBtnEl.addEventListener("click", () => {
     typingInputEl.focus();
 });
 
+/* ==========================
+   HIGH SCORES (Leaderboard)
+   ========================== */
+
+const LB_KEY = "tr_leaderboard";
+const LB_MAX = 10;
+
+function getLeaderboard() {
+    try {
+        const raw = localStorage.getItem(LB_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return { EASY: [], MEDIUM: [], HARD: [] };
+}
+
+function saveLeaderboard(lb) {
+    try {
+        localStorage.setItem(LB_KEY, JSON.stringify(lb));
+    } catch (e) {}
+}
+
+function addHighScore(difficulty, wpm, accuracy, ref) {
+    const lb = getLeaderboard();
+    if (!lb[difficulty]) lb[difficulty] = [];
+    lb[difficulty].push({
+        wpm,
+        accuracy,
+        date: new Date().toLocaleDateString(),
+        ref: ref || "Unknown"
+    });
+    lb[difficulty].sort((a, b) => b.wpm - a.wpm);
+    lb[difficulty] = lb[difficulty].slice(0, LB_MAX);
+    saveLeaderboard(lb);
+}
+
+function isHighScore(difficulty, wpm) {
+    const lb = getLeaderboard();
+    const scores = lb[difficulty] || [];
+    if (scores.length < LB_MAX) return true;
+    return wpm > scores[scores.length - 1].wpm;
+}
+
+function renderLeaderboard(difficulty) {
+    const lb = getLeaderboard();
+    const scores = lb[difficulty] || [];
+    const list = document.getElementById("leaderboardList");
+    if (!list) return;
+
+    if (scores.length === 0) {
+        list.innerHTML = `<div class="lb-empty">No scores yet. Complete a verse to set a record!</div>`;
+        return;
+    }
+
+    list.innerHTML = scores
+        .map((s, i) => {
+            let rankClass = "";
+            let rankLabel = `#${i + 1}`;
+            if (i === 0) { rankClass = "gold"; rankLabel = "🥇"; }
+            else if (i === 1) { rankClass = "silver"; rankLabel = "🥈"; }
+            else if (i === 2) { rankClass = "bronze"; rankLabel = "🥉"; }
+            return `
+                <div class="lb-entry">
+                    <span class="lb-rank ${rankClass}">${rankLabel}</span>
+                    <span><strong>${s.wpm}</strong> WPM · ${s.accuracy}%</span>
+                    <span class="lb-date">${s.ref}<br>${s.date}</span>
+                </div>`;
+        })
+        .join("");
+}
+
 function closeModal() {
     modalOverlayEl.classList.remove("active");
     appContainerEl.removeAttribute("aria-hidden");
@@ -809,7 +881,69 @@ newVerseBtnEl.addEventListener("click", () => {
     loadVerse();
 });
 
+/* ==========================
+   LEADERBOARD
+   ========================== */
+
+const leaderboardOverlayEl = document.getElementById("leaderboardOverlay");
+const leaderboardBtnEl = document.getElementById("leaderboardBtn");
+const lbCloseBtnEl = document.getElementById("lbCloseBtn");
+
+leaderboardBtnEl.addEventListener("click", () => {
+    const activeTab = leaderboardOverlayEl.querySelector(".lb-tab.active");
+    renderLeaderboard(activeTab ? activeTab.dataset.diff : currentDifficulty);
+    leaderboardOverlayEl.classList.add("active");
+});
+
+lbCloseBtnEl.addEventListener("click", () => {
+    leaderboardOverlayEl.classList.remove("active");
+});
+
+leaderboardOverlayEl.addEventListener("click", (e) => {
+    if (e.target === leaderboardOverlayEl) {
+        leaderboardOverlayEl.classList.remove("active");
+    }
+});
+
+leaderboardOverlayEl.addEventListener("click", (e) => {
+    const tab = e.target.closest(".lb-tab");
+    if (tab) {
+        leaderboardOverlayEl.querySelectorAll(".lb-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        renderLeaderboard(tab.dataset.diff);
+    }
+});
+
+/* ==========================
+   SHARE RESULT
+   ========================== */
+
+const shareBtnEl = document.getElementById("shareBtn");
+
+shareBtnEl.addEventListener("click", () => {
+    const wpm = modalWpmEl.textContent;
+    const acc = modalAccuracyEl.textContent;
+    const time = modalTimeEl.textContent;
+    const ref = currentVerse?.reference || "Scripture";
+    const text = `✝️ Scripture Racer\n\n📖 ${ref}\n⚡ ${wpm} WPM\n🎯 ${acc} accuracy\n⏱ ${time}\n\n"Type the Word. Know the Word."`;
+    navigator.clipboard.writeText(text).then(() => {
+        shareBtnEl.classList.add("copied");
+        setTimeout(() => shareBtnEl.classList.remove("copied"), 2000);
+    }).catch(() => {
+        shareBtnEl.textContent = "❌ Copy failed";
+        setTimeout(() => shareBtnEl.textContent = "📋 Share", 1500);
+    });
+});
+
 window.addEventListener("keydown", (e) => {
+    if (leaderboardOverlayEl?.classList.contains("active")) {
+        if (e.key === "Escape") {
+            leaderboardOverlayEl.classList.remove("active");
+            e.preventDefault();
+        }
+        return;
+    }
+
     if (modalOverlayEl.classList.contains("active")) {
         if (e.key === "Enter") {
             e.preventDefault();

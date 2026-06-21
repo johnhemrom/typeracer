@@ -34,6 +34,9 @@
                 <!-- Custom Verse Toggle -->
                 <button id="customToggleBtn" class="theme-btn" title="Type your own verse" aria-label="Custom verse mode">✍️</button>
 
+                <!-- Leaderboard Toggle -->
+                <button id="leaderboardBtn" class="theme-btn" title="View high scores" aria-label="Leaderboard">🏆</button>
+
                 <!-- Translation Filter Dropdown -->
                 <div class="select-wrapper">
                     <select id="translationFilter" title="Filter Bible Translation Collection">
@@ -145,6 +148,22 @@
             </div>
         </div>
 
+        <!-- LEADERBOARD OVERLAY -->
+        <div id="leaderboardOverlay" class="modal-overlay leaderboard-overlay" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+            <div class="leaderboard-panel">
+                <h3 id="leaderboardTitle">🏆 High Scores</h3>
+                <div class="leaderboard-tabs">
+                    <button class="lb-tab active" data-diff="EASY">Easy</button>
+                    <button class="lb-tab" data-diff="MEDIUM">Medium</button>
+                    <button class="lb-tab" data-diff="HARD">Hard</button>
+                </div>
+                <div id="leaderboardList" class="leaderboard-list">
+                    <div class="lb-empty">No scores yet. Complete a verse to set a record!</div>
+                </div>
+                <button class="btn btn-secondary" id="lbCloseBtn">Close</button>
+            </div>
+        </div>
+
         <!-- FOOTER -->
         <footer>
             <svg viewBox="0 0 24 24">
@@ -196,6 +215,7 @@
 
             <!-- Actions buttons -->
             <div class="modal-actions">
+                <button id="shareBtn" class="btn btn-secondary" title="Share your result">📋 Share</button>
                 <button id="tryAgainBtn" class="btn btn-secondary">Try Again</button>
                 <button id="newVerseBtn" class="btn btn-primary">New Verse</button>
             </div>
