@@ -616,6 +616,7 @@ function completeVerse() {
     const finalAccuracy = totalKeystrokes > 0 ? Math.round(((totalKeystrokes - errors) / totalKeystrokes) * 100) : 100;
 
     addHighScore(currentDifficulty, finalWpm, Math.max(0, finalAccuracy), currentVerse?.reference || "Custom" );
+    addHistoryEntry(finalWpm, Math.max(0, finalAccuracy), currentDifficulty, currentVerse?.reference || "Custom");
 
     streak++;
     updateStreakDisplay();
@@ -865,6 +866,177 @@ function renderLeaderboard(difficulty) {
         .join("");
 }
 
+/* ==========================
+   PROGRESS HISTORY
+   ========================== */
+
+const HIST_KEY = "tr_history";
+
+function getHistory() {
+    try {
+        const raw = localStorage.getItem(HIST_KEY);
+        if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return [];
+}
+
+function saveHistory(h) {
+    try {
+        localStorage.setItem(HIST_KEY, JSON.stringify(h));
+    } catch (e) {}
+}
+
+function addHistoryEntry(wpm, accuracy, difficulty, ref) {
+    const h = getHistory();
+    h.push({
+        wpm,
+        accuracy,
+        difficulty,
+        ref: ref || "Unknown",
+        ts: Date.now()
+    });
+    saveHistory(h);
+}
+
+function renderProgress() {
+    const h = getHistory();
+    const totalEl = document.getElementById("progTotal");
+    const bestEl = document.getElementById("progBestWpm");
+    const avgEl = document.getElementById("progAvgAcc");
+    const streakEl = document.getElementById("progStreak");
+    const listEl = document.getElementById("progressHistoryList");
+    const canvas = document.getElementById("progressChart");
+
+    if (!totalEl) return;
+
+    totalEl.textContent = h.length;
+    streakEl.textContent = streak;
+
+    if (h.length === 0) {
+        bestEl.textContent = "0";
+        avgEl.textContent = "0%";
+        if (listEl) listEl.innerHTML = `<div class="lb-empty">No history yet.</div>`;
+        drawChart(canvas, []);
+        return;
+    }
+
+    const best = Math.max(...h.map(e => e.wpm));
+    bestEl.textContent = best;
+
+    const avgAcc = Math.round(h.reduce((s, e) => s + e.accuracy, 0) / h.length);
+    avgEl.textContent = `${avgAcc}%`;
+
+    if (listEl) {
+        const recent = [...h].reverse().slice(0, 20);
+        listEl.innerHTML = recent
+            .map(e => {
+                const d = new Date(e.ts);
+                const dateStr = d.toLocaleDateString();
+                return `
+                    <div class="ph-entry">
+                        <span>⚡${e.wpm} · 🎯${e.accuracy}%</span>
+                        <span class="ph-ref">${e.ref}</span>
+                        <span style="font-size:0.65rem;color:var(--ink-light)">${dateStr}</span>
+                    </div>`;
+            })
+            .join("");
+    }
+
+    drawChart(canvas, h);
+}
+
+function drawChart(canvas, history) {
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width;
+    const hCanvas = canvas.height;
+    const pad = { top: 20, bottom: 28, left: 38, right: 16 };
+    const chartW = w - pad.left - pad.right;
+    const chartH = hCanvas - pad.top - pad.bottom;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = hCanvas * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = hCanvas + "px";
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, w, hCanvas);
+
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const textColor = isDark ? "#D4C5A9" : "#3E2916";
+    const gridColor = isDark ? "rgba(212,197,169,0.15)" : "rgba(62,41,22,0.12)";
+    const lineColor = isDark ? "#BFA15F" : "#7B4F2E";
+    const fillColor = isDark ? "rgba(191,161,95,0.08)" : "rgba(123,79,46,0.08)";
+
+    if (history.length < 2) {
+        ctx.fillStyle = textColor;
+        ctx.font = "13px Lora, serif";
+        ctx.textAlign = "center";
+        ctx.fillText(history.length === 1 ? "Complete more verses to see your trend" : "No data yet", w / 2, hCanvas / 2);
+        return;
+    }
+
+    const recent = history.slice(-30);
+    const maxWpm = Math.max(...recent.map(e => e.wpm), 50);
+    const minWpm = Math.max(0, Math.min(...recent.map(e => e.wpm)) - 10);
+
+    function x(i) { return pad.left + (i / (recent.length - 1)) * chartW; }
+    function y(v) { return pad.top + chartH - ((v - minWpm) / (maxWpm - minWpm)) * chartH; }
+
+    // Grid lines
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 4; i++) {
+        const gy = pad.top + (i / 4) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, gy);
+        ctx.lineTo(w - pad.right, gy);
+        ctx.stroke();
+        ctx.fillStyle = textColor;
+        ctx.font = "10px Lora, serif";
+        ctx.textAlign = "right";
+        const label = Math.round(maxWpm - (i / 4) * (maxWpm - minWpm));
+        ctx.fillText(label, pad.left - 4, gy + 3);
+    }
+
+    // Area fill
+    ctx.beginPath();
+    ctx.moveTo(x(0), hCanvas - pad.bottom);
+    recent.forEach((e, i) => ctx.lineTo(x(i), y(e.wpm)));
+    ctx.lineTo(x(recent.length - 1), hCanvas - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+
+    // Line
+    ctx.beginPath();
+    recent.forEach((e, i) => {
+        if (i === 0) ctx.moveTo(x(i), y(e.wpm));
+        else ctx.lineTo(x(i), y(e.wpm));
+    });
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Dots
+    recent.forEach((e, i) => {
+        ctx.beginPath();
+        ctx.arc(x(i), y(e.wpm), 3, 0, Math.PI * 2);
+        ctx.fillStyle = lineColor;
+        ctx.fill();
+    });
+
+    // X-axis labels
+    ctx.fillStyle = textColor;
+    ctx.font = "9px Lora, serif";
+    ctx.textAlign = "center";
+    const step = Math.max(1, Math.floor(recent.length / 6));
+    for (let i = 0; i < recent.length; i += step) {
+        const d = new Date(recent[i].ts);
+        ctx.fillText(`${d.getMonth() + 1}/${d.getDate()}`, x(i), hCanvas - 6);
+    }
+}
+
 function closeModal() {
     modalOverlayEl.classList.remove("active");
     appContainerEl.removeAttribute("aria-hidden");
@@ -915,6 +1087,29 @@ leaderboardOverlayEl.addEventListener("click", (e) => {
 });
 
 /* ==========================
+   PROGRESS
+   ========================== */
+
+const progressOverlayEl = document.getElementById("progressOverlay");
+const progressBtnEl = document.getElementById("progressBtn");
+const progCloseBtnEl = document.getElementById("progCloseBtn");
+
+progressBtnEl.addEventListener("click", () => {
+    renderProgress();
+    progressOverlayEl.classList.add("active");
+});
+
+progCloseBtnEl.addEventListener("click", () => {
+    progressOverlayEl.classList.remove("active");
+});
+
+progressOverlayEl.addEventListener("click", (e) => {
+    if (e.target === progressOverlayEl) {
+        progressOverlayEl.classList.remove("active");
+    }
+});
+
+/* ==========================
    SHARE RESULT
    ========================== */
 
@@ -939,6 +1134,14 @@ window.addEventListener("keydown", (e) => {
     if (leaderboardOverlayEl?.classList.contains("active")) {
         if (e.key === "Escape") {
             leaderboardOverlayEl.classList.remove("active");
+            e.preventDefault();
+        }
+        return;
+    }
+
+    if (progressOverlayEl?.classList.contains("active")) {
+        if (e.key === "Escape") {
+            progressOverlayEl.classList.remove("active");
             e.preventDefault();
         }
         return;

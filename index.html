@@ -37,6 +37,9 @@
                 <!-- Leaderboard Toggle -->
                 <button id="leaderboardBtn" class="theme-btn" title="View high scores" aria-label="Leaderboard">🏆</button>
 
+                <!-- Progress Toggle -->
+                <button id="progressBtn" class="theme-btn" title="View progress history" aria-label="Progress history">📊</button>
+
                 <!-- Translation Filter Dropdown -->
                 <div class="select-wrapper">
                     <select id="translationFilter" title="Filter Bible Translation Collection">
@@ -145,6 +148,34 @@
             <div id="streakBadge" class="streak-badge" style="visibility: hidden;">
                 <span class="fire-icon">🔥</span>
                 <span id="streakText">0 Verse Streak!</span>
+            </div>
+        </div>
+
+        <!-- PROGRESS OVERLAY -->
+        <div id="progressOverlay" class="modal-overlay progress-overlay" role="dialog" aria-modal="true" aria-labelledby="progressTitle">
+            <div class="progress-panel">
+                <h3 id="progressTitle">📊 Progress History</h3>
+                <div class="progress-stats-row">
+                    <div class="progress-stat">
+                        <span class="prog-label">Total Verses</span>
+                        <span id="progTotal" class="prog-value">0</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="prog-label">Best WPM</span>
+                        <span id="progBestWpm" class="prog-value">0</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="prog-label">Avg Accuracy</span>
+                        <span id="progAvgAcc" class="prog-value">0%</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="prog-label">Current Streak</span>
+                        <span id="progStreak" class="prog-value">0</span>
+                    </div>
+                </div>
+                <canvas id="progressChart" class="progress-chart" width="400" height="200"></canvas>
+                <div id="progressHistoryList" class="progress-history-list"></div>
+                <button class="btn btn-secondary" id="progCloseBtn">Close</button>
             </div>
         </div>
 
