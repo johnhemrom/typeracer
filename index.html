@@ -20,8 +20,8 @@
         <header>
             <div class="header-controls">
                 <!-- Sound Toggle (Quill Icon) -->
-                <button id="soundBtn" class="quill-btn" title="Toggle Mechanical Typewriter Clicking Sounds">
-                    <svg viewBox="0 0 24 24">
+                <button id="soundBtn" class="quill-btn" title="Toggle Mechanical Typewriter Clicking Sounds" aria-label="Toggle sound">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
                         <line x1="16" y1="8" x2="2" y2="22" />
                         <line x1="17.5" y1="15" x2="9" y2="15" />
@@ -29,7 +29,7 @@
                 </button>
 
                 <!-- Theme Toggle -->
-                <button id="themeBtn" class="theme-btn" title="Toggle theme (Sepia / Dark / Light)">🕯️</button>
+                <button id="themeBtn" class="theme-btn" title="Toggle theme (Sepia / Dark / Light)" aria-label="Toggle theme">🕯️</button>
 
                 <!-- Translation Filter Dropdown -->
                 <div class="select-wrapper">
@@ -104,13 +104,13 @@
         <div id="scrollInputContainer" class="scroll-input-container">
             <div class="scroll-roller left"></div>
             <div class="scroll-input-wrapper" id="scrollWrapper">
-                <input type="text" id="typingInput" class="typing-input" placeholder="Click here and begin typing the verse above..." autocomplete="off" autofocus>
+                <input type="text" id="typingInput" class="typing-input" placeholder="Click here and begin typing the verse above..." autocomplete="off" autofocus aria-label="Type the verse shown above">
             </div>
             <div class="scroll-roller right"></div>
         </div>
 
         <!-- LIVE STATS BAR -->
-        <div class="stats-bar">
+        <div class="stats-bar" role="status" aria-live="polite" aria-label="Live typing statistics">
             <div class="stat-stamp">
                 <span class="stat-label">WPM</span>
                 <span id="liveWpm" class="stat-value">0</span>
@@ -144,10 +144,10 @@
     </div>
 
     <!-- COMPLETION OVERLAY MODAL -->
-    <div id="modalOverlay" class="modal-overlay">
+    <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="completion-modal">
             <!-- Majestic Heading -->
-            <h2 class="modal-title">Scripture Completed</h2>
+            <h2 id="modalTitle" class="modal-title">Scripture Completed</h2>
             <p class="modal-subtitle">Your labor in the Lord is not in vain</p>
 
             <!-- 3D Wax Seal Animation -->

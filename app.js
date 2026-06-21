@@ -292,6 +292,7 @@ const blessingTextEl = document.getElementById("blessingText");
 const blessingRefEl = document.getElementById("blessingRef");
 const tryAgainBtnEl = document.getElementById("tryAgainBtn");
 const newVerseBtnEl = document.getElementById("newVerseBtn");
+const appContainerEl = document.querySelector(".app-container");
 
 function initAudio() {
     if (!audioCtx) {
@@ -539,6 +540,8 @@ function completeVerse() {
     blessingRefEl.textContent = `— ${encouragement.ref}`;
 
     modalOverlayEl.classList.add("active");
+    appContainerEl.setAttribute("aria-hidden", "true");
+    setTimeout(() => tryAgainBtnEl.focus(), 450);
 
     setTimeout(() => {
         playStampSound();
@@ -658,26 +661,42 @@ themeBtnEl.addEventListener("click", () => {
     typingInputEl.focus();
 });
 
-tryAgainBtnEl.addEventListener("click", () => {
+function closeModal() {
     modalOverlayEl.classList.remove("active");
-    loadVerse(currentVerse);
+    appContainerEl.removeAttribute("aria-hidden");
     typingInputEl.focus();
+}
+
+tryAgainBtnEl.addEventListener("click", () => {
+    closeModal();
+    loadVerse(currentVerse);
 });
 
 newVerseBtnEl.addEventListener("click", () => {
-    modalOverlayEl.classList.remove("active");
+    closeModal();
     loadVerse();
-    typingInputEl.focus();
 });
 
 window.addEventListener("keydown", (e) => {
     if (modalOverlayEl.classList.contains("active")) {
         if (e.key === "Enter") {
+            e.preventDefault();
             newVerseBtnEl.click();
         } else if (e.key === "Escape") {
-            modalOverlayEl.classList.remove("active");
+            e.preventDefault();
+            closeModal();
             loadVerse();
-            typingInputEl.focus();
+        } else if (e.key === "Tab") {
+            const focusable = modalOverlayEl.querySelectorAll('button:not([disabled])');
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
         }
     } else {
         if (document.activeElement !== typingInputEl && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
