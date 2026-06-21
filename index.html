@@ -3,14 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scripture Racer - Premium Bible TypeRacer</title>
-    
+    <title>Scripture Racer — Bible Verse Typing Game</title>
+    <meta name="description" content="Type the Word. Know the Word. A premium Bible verse typing game — practice Scripture memorization while improving your typing speed and accuracy.">
+    <meta name="theme-color" content="#F3E5C8">
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Scripture Racer — Bible Verse Typing Game">
+    <meta property="og:description" content="Type the Word. Know the Word. Practice Scripture memorization while improving your typing speed and accuracy.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://typeracer.vercel.app">
+
     <!-- Google Fonts for the Ancient Scroll theme -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=IM+Fell+English:ital@0;1&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2v20M7 8h10' stroke='%238B1A1A' stroke-width='3' stroke-linecap='round' fill='none'/></svg>">
 </head>
 <body>
 
@@ -254,6 +264,11 @@
     </div>
 
     <!-- JAVASCRIPT GAME ENGINE -->
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+    </script>
 </body>
 </html>
