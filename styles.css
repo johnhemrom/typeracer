@@ -1080,23 +1080,20 @@ footer svg {
     100% { background-position: 200% 0; }
 }
 
-/* Custom verse section */
-.custom-verse-section {
+/* Custom input area (textarea — shown only when typing custom) */
+.custom-input-area {
     display: none;
     width: 100%;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-top: 10px;
-}
-
-.custom-verse-section.visible {
-    display: flex;
-}
-
-.custom-verse-section textarea {
-    width: 100%;
     max-width: 700px;
+    margin: 10px auto 0;
+}
+
+.custom-input-area.visible {
+    display: block;
+}
+
+.custom-input-area textarea {
+    width: 100%;
     min-height: 120px;
     padding: 16px 20px;
     font-family: var(--font-body);
@@ -1111,23 +1108,30 @@ footer svg {
     transition: border-color 0.2s;
 }
 
-.custom-verse-section textarea:focus {
+.custom-input-area textarea:focus {
     border-color: var(--gold-accent);
     box-shadow: 0 0 8px rgba(191, 161, 95, 0.3);
 }
 
-.custom-verse-section textarea::placeholder {
+.custom-input-area textarea::placeholder {
     color: var(--ink-light);
     font-style: italic;
     opacity: 0.7;
 }
 
-.custom-actions {
-    display: flex;
-    gap: 12px;
+/* Custom actions bar — always visible in Custom mode */
+.custom-actions-bar {
+    display: none;
+    gap: 10px;
     width: 100%;
     max-width: 700px;
-    justify-content: flex-end;
+    justify-content: center;
+    margin: 10px auto 0;
+    flex-wrap: wrap;
+}
+
+.custom-actions-bar.visible {
+    display: flex;
 }
 
 .fetch-btn {

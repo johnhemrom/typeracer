@@ -367,7 +367,8 @@ const blessingRefEl = document.getElementById("blessingRef");
 const tryAgainBtnEl = document.getElementById("tryAgainBtn");
 const newVerseBtnEl = document.getElementById("newVerseBtn");
 const appContainerEl = document.querySelector(".app-container");
-const customVerseSectionEl = document.getElementById("customVerseSection");
+const customInputAreaEl = document.getElementById("customInputArea");
+const customActionsBarEl = document.getElementById("customActionsBar");
 const customVerseInputEl = document.getElementById("customVerseInput");
 const fetchVerseBtnEl = document.getElementById("fetchVerseBtn");
 const fetchPassageBtnEl = document.getElementById("fetchPassageBtn");
@@ -808,12 +809,13 @@ document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
     radio.addEventListener("change", (e) => {
         const val = e.target.value;
         if (val === "CUSTOM") {
-            customVerseSectionEl.classList.add("visible");
+            customActionsBarEl.classList.add("visible");
             customVerseInputEl.focus();
             sectionOpenedAt = Date.now();
             return;
         }
-        customVerseSectionEl.classList.remove("visible");
+        customActionsBarEl.classList.remove("visible");
+        customInputAreaEl.classList.remove("visible");
         currentDifficulty = val;
         streak = 0;
         updateStreakDisplay();
@@ -859,7 +861,7 @@ themeBtnEl.addEventListener("click", () => {
 fetchVerseBtnEl.addEventListener("click", (e) => {
     if (!e.isTrusted) return;
     if (Date.now() - sectionOpenedAt < 300) return;
-    customVerseSectionEl.classList.remove("visible");
+    customInputAreaEl.classList.remove("visible");
     setLoading(true);
     fetchRandomVerse();
 });
@@ -867,13 +869,21 @@ fetchVerseBtnEl.addEventListener("click", (e) => {
 fetchPassageBtnEl.addEventListener("click", (e) => {
     if (!e.isTrusted) return;
     if (Date.now() - sectionOpenedAt < 300) return;
-    customVerseSectionEl.classList.remove("visible");
+    customInputAreaEl.classList.remove("visible");
     setLoading(true);
     fetchRandomPassage();
 });
 
 startCustomBtnEl.addEventListener("click", () => {
+    const isVisible = customInputAreaEl.classList.contains("visible");
     const text = customVerseInputEl.value.trim();
+
+    if (!isVisible) {
+        customInputAreaEl.classList.add("visible");
+        customVerseInputEl.focus();
+        return;
+    }
+
     if (!text) {
         customVerseInputEl.focus();
         customVerseInputEl.style.borderColor = "var(--deep-red)";
@@ -882,7 +892,8 @@ startCustomBtnEl.addEventListener("click", () => {
         }, 1000);
         return;
     }
-    customVerseSectionEl.classList.remove("visible");
+
+    customInputAreaEl.classList.remove("visible");
     const customVerse = {
         text,
         reference: "Custom Verse",

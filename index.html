@@ -102,14 +102,16 @@
             </div>
         </div>
 
-        <!-- CUSTOM VERSE INPUT -->
-        <div id="customVerseSection" class="custom-verse-section">
+        <!-- CUSTOM TEXTAREA (hidden after fetch/start) -->
+        <div id="customInputArea" class="custom-input-area">
             <textarea id="customVerseInput" placeholder="Paste or type your own verse here..."></textarea>
-            <div class="custom-actions">
-                <button id="fetchVerseBtn" class="fetch-btn" title="Fetch a single verse from the Bible API">📖 Fetch Verse</button>
-                <button id="fetchPassageBtn" class="fetch-btn" title="Fetch a long passage (5-10 verses) from the Bible API">📜 Fetch Passage</button>
-                <button id="startCustomBtn" class="btn btn-primary" style="padding:8px 20px;font-size:0.8rem">Start Typing</button>
-            </div>
+        </div>
+
+        <!-- CUSTOM ACTIONS (always visible in Custom mode) -->
+        <div id="customActionsBar" class="custom-actions-bar">
+            <button id="fetchVerseBtn" class="fetch-btn" title="Fetch a single verse from the Bible API">📖 Fetch Verse</button>
+            <button id="fetchPassageBtn" class="fetch-btn" title="Fetch a long passage (5-10 verses) from the Bible API">📜 Fetch Passage</button>
+            <button id="startCustomBtn" class="btn btn-primary" style="padding:8px 20px;font-size:0.8rem">✍️ Type Custom</button>
         </div>
 
         <!-- TYPING PARCHMENT VERSE CARD -->
