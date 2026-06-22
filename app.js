@@ -536,7 +536,10 @@ async function fetchRandomVerse() {
     const query = `${ref.book.replace(/ /g, "+")}+${ref.chapter}:${ref.verse}`;
 
     try {
-        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`, { signal: controller.signal });
+        clearTimeout(timeout);
         if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const text = data.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -549,6 +552,7 @@ async function fetchRandomVerse() {
         BIBLE_VERSES.push(verse);
         setLoading(false);
         loadVerse(verse);
+        fetchVerseBtnEl.textContent = "📖 Fetch Verse";
     } catch (e) {
         fetchVerseBtnEl.textContent = "📖 Fetch Failed — Try Again";
         setTimeout(() => {
@@ -572,7 +576,10 @@ async function fetchRandomPassage() {
     const query = `${passage.book.replace(/ /g, "+")}+${passage.chapter}:${passage.start}-${passage.end}`;
 
     try {
-        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`, { signal: controller.signal });
+        clearTimeout(timeout);
         if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const text = data.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
@@ -586,6 +593,7 @@ async function fetchRandomPassage() {
         BIBLE_VERSES.push(verse);
         setLoading(false);
         loadVerse(verse);
+        fetchPassageBtnEl.textContent = "📜 Fetch Passage";
     } catch (e) {
         fetchPassageBtnEl.textContent = "📜 Fetch Failed — Try Again";
         setTimeout(() => {
