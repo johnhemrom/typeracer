@@ -1168,7 +1168,8 @@ window.addEventListener("keydown", (e) => {
             }
         }
     } else {
-        if (document.activeElement !== typingInputEl && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const tag = document.activeElement?.tagName || "";
+        if (tag !== "INPUT" && tag !== "TEXTAREA" && document.activeElement !== typingInputEl && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
             typingInputEl.focus();
         }
     }
