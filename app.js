@@ -306,6 +306,7 @@ let currentDifficulty = "MEDIUM";
 let currentTranslation = "ALL";
 let isCustomMode = false;
 let isFetching = false;
+let sectionOpenedAt = 0;
 
 function saveState() {
     try {
@@ -852,18 +853,23 @@ customToggleBtnEl.addEventListener("click", () => {
     customVerseSectionEl.classList.toggle("visible");
     if (customVerseSectionEl.classList.contains("visible")) {
         customVerseInputEl.focus();
+        sectionOpenedAt = Date.now();
     } else {
         typingInputEl.focus();
     }
 });
 
-fetchVerseBtnEl.addEventListener("click", () => {
+fetchVerseBtnEl.addEventListener("click", (e) => {
+    if (!e.isTrusted) return;
+    if (Date.now() - sectionOpenedAt < 300) return;
     customVerseSectionEl.classList.remove("visible");
     setLoading(true);
     fetchRandomVerse();
 });
 
-fetchPassageBtnEl.addEventListener("click", () => {
+fetchPassageBtnEl.addEventListener("click", (e) => {
+    if (!e.isTrusted) return;
+    if (Date.now() - sectionOpenedAt < 300) return;
     customVerseSectionEl.classList.remove("visible");
     setLoading(true);
     fetchRandomPassage();
