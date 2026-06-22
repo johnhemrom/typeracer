@@ -1,16 +1,6 @@
-const CACHE = "scripture-racer-v1";
-const ASSETS = [
-    "/",
-    "/index.html",
-    "/styles.css",
-    "/app.js",
-    "/manifest.json"
-];
+const CACHE = "scripture-racer-v2";
 
-self.addEventListener("install", (e) => {
-    e.waitUntil(
-        caches.open(CACHE).then((cache) => cache.addAll(ASSETS))
-    );
+self.addEventListener("install", () => {
     self.skipWaiting();
 });
 
@@ -25,6 +15,15 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
     e.respondWith(
-        caches.match(e.request).then((cached) => cached || fetch(e.request))
+        caches.match(e.request).then((cached) => {
+            const fetchPromise = fetch(e.request).then((res) => {
+                if (res.ok) {
+                    const clone = res.clone();
+                    caches.open(CACHE).then((cache) => cache.put(e.request, clone));
+                }
+                return res;
+            }).catch(() => cached);
+            return cached || fetchPromise;
+        })
     );
 });
