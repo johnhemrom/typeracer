@@ -218,37 +218,42 @@ const ENCOURAGEMENTS = [
     }
 ];
 
-const BIBLE_REFERENCES = [
-    { book: "John", chapter: 3, verse: 16 },
-    { book: "Psalm", chapter: 23, verse: 1 },
-    { book: "Proverbs", chapter: 3, verse: 5 },
-    { book: "Philippians", chapter: 4, verse: 13 },
-    { book: "Romans", chapter: 8, verse: 28 },
-    { book: "Jeremiah", chapter: 29, verse: 11 },
-    { book: "Psalm", chapter: 27, verse: 1 },
-    { book: "Psalm", chapter: 119, verse: 105 },
-    { book: "Isaiah", chapter: 40, verse: 31 },
-    { book: "Joshua", chapter: 1, verse: 9 },
-    { book: "Psalm", chapter: 34, verse: 18 },
-    { book: "2 Corinthians", chapter: 5, verse: 17 },
-    { book: "Matthew", chapter: 6, verse: 33 },
-    { book: "Psalm", chapter: 46, verse: 10 },
-    { book: "Psalm", chapter: 103, verse: 1 },
-    { book: "1 Corinthians", chapter: 13, verse: 1 },
-    { book: "Colossians", chapter: 3, verse: 12 },
-    { book: "Philippians", chapter: 4, verse: 6 },
-    { book: "Psalm", chapter: 121, verse: 1 },
-    { book: "Genesis", chapter: 1, verse: 1 },
-    { book: "Psalm", chapter: 1, verse: 1 },
-    { book: "Psalm", chapter: 19, verse: 14 },
-    { book: "Psalm", chapter: 51, verse: 10 },
-    { book: "Psalm", chapter: 139, verse: 23 },
-    { book: "Proverbs", chapter: 16, verse: 3 },
-    { book: "Exodus", chapter: 14, verse: 14 },
-    { book: "Psalm", chapter: 91, verse: 1 },
-    { book: "Psalm", chapter: 100, verse: 1 },
-    { book: "Psalm", chapter: 150, verse: 6 },
-    { book: "1 John", chapter: 4, verse: 19 },
+const BIBLE_PASSAGES = [
+    { book: "Psalm", chapter: 23, start: 1, end: 6 },
+    { book: "Psalm", chapter: 1, start: 1, end: 6 },
+    { book: "Psalm", chapter: 19, start: 7, end: 14 },
+    { book: "Psalm", chapter: 27, start: 1, end: 6 },
+    { book: "Psalm", chapter: 34, start: 1, end: 8 },
+    { book: "Psalm", chapter: 91, start: 1, end: 7 },
+    { book: "Psalm", chapter: 100, start: 1, end: 5 },
+    { book: "Psalm", chapter: 103, start: 1, end: 8 },
+    { book: "Psalm", chapter: 119, start: 9, end: 16 },
+    { book: "Psalm", chapter: 121, start: 1, end: 8 },
+    { book: "Psalm", chapter: 139, start: 1, end: 10 },
+    { book: "Psalm", chapter: 150, start: 1, end: 6 },
+    { book: "Proverbs", chapter: 3, start: 1, end: 8 },
+    { book: "Isaiah", chapter: 40, start: 28, end: 31 },
+    { book: "Isaiah", chapter: 55, start: 6, end: 11 },
+    { book: "Jeremiah", chapter: 29, start: 11, end: 14 },
+    { book: "Matthew", chapter: 5, start: 3, end: 12 },
+    { book: "Matthew", chapter: 6, start: 25, end: 34 },
+    { book: "Matthew", chapter: 11, start: 28, end: 30 },
+    { book: "John", chapter: 1, start: 1, end: 5 },
+    { book: "John", chapter: 3, start: 16, end: 21 },
+    { book: "John", chapter: 14, start: 1, end: 6 },
+    { book: "John", chapter: 15, start: 1, end: 8 },
+    { book: "Romans", chapter: 8, start: 28, end: 32 },
+    { book: "Romans", chapter: 12, start: 1, end: 5 },
+    { book: "1 Corinthians", chapter: 13, start: 1, end: 8 },
+    { book: "2 Corinthians", chapter: 5, start: 17, end: 21 },
+    { book: "Philippians", chapter: 4, start: 4, end: 9 },
+    { book: "Colossians", chapter: 3, start: 12, end: 17 },
+    { book: "Hebrews", chapter: 11, start: 1, end: 6 },
+    { book: "Hebrews", chapter: 12, start: 1, end: 3 },
+    { book: "James", chapter: 1, start: 2, end: 8 },
+    { book: "1 Peter", chapter: 5, start: 6, end: 11 },
+    { book: "1 John", chapter: 4, start: 7, end: 12 },
+    { book: "Revelation", chapter: 21, start: 1, end: 7 },
 ];
 
 const THEMES = ["sepia", "dark", ""];
@@ -482,19 +487,20 @@ async function fetchRandomVerse() {
     fetchRandomBtnEl.disabled = true;
     fetchRandomBtnEl.innerHTML = `<span class="spinner"></span> Fetching...`;
 
-    const ref = BIBLE_REFERENCES[Math.floor(Math.random() * BIBLE_REFERENCES.length)];
-    const query = `${ref.book.replace(/ /g, "+")}+${ref.chapter}:${ref.verse}`;
+    const passage = BIBLE_PASSAGES[Math.floor(Math.random() * BIBLE_PASSAGES.length)];
+    const query = `${passage.book.replace(/ /g, "+")}+${passage.chapter}:${passage.start}-${passage.end}`;
 
     try {
         const res = await fetch(`https://bible-api.com/${query}?translation=kjv`);
         if (!res.ok) throw new Error("API error");
         const data = await res.json();
         const text = data.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        const refStr = data.reference || `${passage.book} ${passage.chapter}:${passage.start}-${passage.end}`;
         const verse = {
             text,
-            reference: data.reference || `${ref.book} ${ref.chapter}:${ref.verse}`,
+            reference: refStr,
             translation: "KJV",
-            difficulty: text.length < 100 ? "EASY" : text.length < 300 ? "MEDIUM" : "HARD"
+            difficulty: "HARD"
         };
         BIBLE_VERSES.push(verse);
         setLoading(false);
@@ -502,7 +508,7 @@ async function fetchRandomVerse() {
     } catch (e) {
         fetchRandomBtnEl.textContent = "📖 Fetch Failed — Try Again";
         setTimeout(() => {
-            fetchRandomBtnEl.textContent = "📖 Fetch Random";
+            fetchRandomBtnEl.textContent = "📖 Fetch Passage";
         }, 2000);
         setLoading(false);
         loadVerse();
