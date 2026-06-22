@@ -256,6 +256,39 @@ const BIBLE_PASSAGES = [
     { book: "Revelation", chapter: 21, start: 1, end: 7 },
 ];
 
+const BIBLE_REFERENCES = [
+    { book: "John", chapter: 3, verse: 16 },
+    { book: "Psalm", chapter: 23, verse: 1 },
+    { book: "Proverbs", chapter: 3, verse: 5 },
+    { book: "Philippians", chapter: 4, verse: 13 },
+    { book: "Romans", chapter: 8, verse: 28 },
+    { book: "Jeremiah", chapter: 29, verse: 11 },
+    { book: "Psalm", chapter: 27, verse: 1 },
+    { book: "Psalm", chapter: 119, verse: 105 },
+    { book: "Isaiah", chapter: 40, verse: 31 },
+    { book: "Joshua", chapter: 1, verse: 9 },
+    { book: "Psalm", chapter: 34, verse: 18 },
+    { book: "2 Corinthians", chapter: 5, verse: 17 },
+    { book: "Matthew", chapter: 6, verse: 33 },
+    { book: "Psalm", chapter: 46, verse: 10 },
+    { book: "Psalm", chapter: 103, verse: 1 },
+    { book: "1 Corinthians", chapter: 13, verse: 1 },
+    { book: "Colossians", chapter: 3, verse: 12 },
+    { book: "Philippians", chapter: 4, verse: 6 },
+    { book: "Psalm", chapter: 121, verse: 1 },
+    { book: "Genesis", chapter: 1, verse: 1 },
+    { book: "Psalm", chapter: 1, verse: 1 },
+    { book: "Psalm", chapter: 19, verse: 14 },
+    { book: "Psalm", chapter: 51, verse: 10 },
+    { book: "Psalm", chapter: 139, verse: 23 },
+    { book: "Proverbs", chapter: 16, verse: 3 },
+    { book: "Exodus", chapter: 14, verse: 14 },
+    { book: "Psalm", chapter: 91, verse: 1 },
+    { book: "Psalm", chapter: 100, verse: 1 },
+    { book: "Psalm", chapter: 150, verse: 6 },
+    { book: "1 John", chapter: 4, verse: 19 },
+];
+
 const THEMES = ["sepia", "dark", ""];
 const THEME_ICONS = { sepia: "🕯️", dark: "🌙", "": "☀️" };
 
@@ -336,7 +369,8 @@ const appContainerEl = document.querySelector(".app-container");
 const customToggleBtnEl = document.getElementById("customToggleBtn");
 const customVerseSectionEl = document.getElementById("customVerseSection");
 const customVerseInputEl = document.getElementById("customVerseInput");
-const fetchRandomBtnEl = document.getElementById("fetchRandomBtn");
+const fetchVerseBtnEl = document.getElementById("fetchVerseBtn");
+const fetchPassageBtnEl = document.getElementById("fetchPassageBtn");
 const startCustomBtnEl = document.getElementById("startCustomBtn");
 
 function initAudio() {
@@ -468,6 +502,16 @@ function playStampSound() {
     } catch(e) {}
 }
 
+function scrollToCurrentChar(el) {
+    if (!el) return;
+    const container = document.querySelector(".parchment-body") || parchmentCardEl;
+    const cRect = container.getBoundingClientRect();
+    const eRect = el.getBoundingClientRect();
+    if (eRect.bottom > cRect.bottom || eRect.top < cRect.top) {
+        el.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+}
+
 function setLoading(isLoading) {
     if (isLoading) {
         verseContentEl.className = "verse-content loading";
@@ -484,8 +528,44 @@ function setLoading(isLoading) {
 async function fetchRandomVerse() {
     if (isFetching) return;
     isFetching = true;
-    fetchRandomBtnEl.disabled = true;
-    fetchRandomBtnEl.innerHTML = `<span class="spinner"></span> Fetching...`;
+    fetchVerseBtnEl.disabled = true;
+    fetchVerseBtnEl.innerHTML = `<span class="spinner"></span> Fetching...`;
+
+    const ref = BIBLE_REFERENCES[Math.floor(Math.random() * BIBLE_REFERENCES.length)];
+    const query = `${ref.book.replace(/ /g, "+")}+${ref.chapter}:${ref.verse}`;
+
+    try {
+        const res = await fetch(`https://bible-api.com/${query}?translation=kjv`);
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        const text = data.text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+        const verse = {
+            text,
+            reference: data.reference || `${ref.book} ${ref.chapter}:${ref.verse}`,
+            translation: "KJV",
+            difficulty: text.length < 100 ? "EASY" : text.length < 300 ? "MEDIUM" : "HARD"
+        };
+        BIBLE_VERSES.push(verse);
+        setLoading(false);
+        loadVerse(verse);
+    } catch (e) {
+        fetchVerseBtnEl.textContent = "📖 Fetch Failed — Try Again";
+        setTimeout(() => {
+            fetchVerseBtnEl.textContent = "📖 Fetch Verse";
+        }, 2000);
+        setLoading(false);
+        loadVerse();
+    } finally {
+        isFetching = false;
+        fetchVerseBtnEl.disabled = false;
+    }
+}
+
+async function fetchRandomPassage() {
+    if (isFetching) return;
+    isFetching = true;
+    fetchPassageBtnEl.disabled = true;
+    fetchPassageBtnEl.innerHTML = `<span class="spinner"></span> Fetching...`;
 
     const passage = BIBLE_PASSAGES[Math.floor(Math.random() * BIBLE_PASSAGES.length)];
     const query = `${passage.book.replace(/ /g, "+")}+${passage.chapter}:${passage.start}-${passage.end}`;
@@ -506,15 +586,15 @@ async function fetchRandomVerse() {
         setLoading(false);
         loadVerse(verse);
     } catch (e) {
-        fetchRandomBtnEl.textContent = "📖 Fetch Failed — Try Again";
+        fetchPassageBtnEl.textContent = "📜 Fetch Failed — Try Again";
         setTimeout(() => {
-            fetchRandomBtnEl.textContent = "📖 Fetch Passage";
+            fetchPassageBtnEl.textContent = "📜 Fetch Passage";
         }, 2000);
         setLoading(false);
         loadVerse();
     } finally {
         isFetching = false;
-        fetchRandomBtnEl.disabled = false;
+        fetchPassageBtnEl.disabled = false;
     }
 }
 
@@ -689,6 +769,7 @@ typingInputEl.addEventListener("input", (e) => {
 
             if (typedIndex < currentVerseChars.length) {
                 charSpans[typedIndex].classList.add("current");
+                scrollToCurrentChar(charSpans[typedIndex]);
             } else {
                 completeVerse();
             }
@@ -697,6 +778,7 @@ typingInputEl.addEventListener("input", (e) => {
             playErrorSound();
             triggerShakeEffect();
             errors++;
+            scrollToCurrentChar(activeSpan);
 
             typingInputEl.value = inputVal.substring(0, typedIndex);
         }
@@ -775,10 +857,16 @@ customToggleBtnEl.addEventListener("click", () => {
     }
 });
 
-fetchRandomBtnEl.addEventListener("click", () => {
+fetchVerseBtnEl.addEventListener("click", () => {
     customVerseSectionEl.classList.remove("visible");
     setLoading(true);
     fetchRandomVerse();
+});
+
+fetchPassageBtnEl.addEventListener("click", () => {
+    customVerseSectionEl.classList.remove("visible");
+    setLoading(true);
+    fetchRandomPassage();
 });
 
 startCustomBtnEl.addEventListener("click", () => {

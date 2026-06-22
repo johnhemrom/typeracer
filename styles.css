@@ -461,6 +461,29 @@ header {
     z-index: 1;
 }
 
+.parchment-body {
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    z-index: 2;
+    scroll-behavior: smooth;
+}
+
+.parchment-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.parchment-body::-webkit-scrollbar-track {
+    background: var(--parchment-shadow);
+    border-radius: 3px;
+}
+
+.parchment-body::-webkit-scrollbar-thumb {
+    background: var(--leather-brown);
+    border-radius: 3px;
+}
+
 .verse-content {
     font-family: var(--font-verse);
     font-size: 1.85rem;
@@ -469,8 +492,6 @@ header {
     text-align: justify;
     text-align-last: center;
     width: 100%;
-    position: relative;
-    z-index: 2;
     word-wrap: break-word;
     word-break: keep-all;
     user-select: none;

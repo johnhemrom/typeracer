@@ -104,7 +104,8 @@
         <div id="customVerseSection" class="custom-verse-section">
             <textarea id="customVerseInput" placeholder="Paste or type your own verse here..."></textarea>
             <div class="custom-actions">
-                <button id="fetchRandomBtn" class="fetch-btn" title="Fetch a long passage (5-10 verses) from the Bible API">📖 Fetch Passage</button>
+                <button id="fetchVerseBtn" class="fetch-btn" title="Fetch a single verse from the Bible API">📖 Fetch Verse</button>
+                <button id="fetchPassageBtn" class="fetch-btn" title="Fetch a long passage (5-10 verses) from the Bible API">📜 Fetch Passage</button>
                 <button id="startCustomBtn" class="btn btn-primary" style="padding:8px 20px;font-size:0.8rem">Start Typing</button>
             </div>
         </div>
@@ -116,15 +117,18 @@
                 <path d="M12,2C11.5,4 9.5,6.5 7,7.5C4.5,8.5 2,9 2,10C2,11.5 5.5,12 8.5,12.5C9,14 10,17.5 11,21C11.5,22 12,22 12.5,21C13.5,17.5 14.5,14 15,12.5C18,12 21.5,11.5 21.5,10C21.5,9 19,8.5 16.5,7.5C14,6.5 12,4 12,2Z"/>
             </svg>
             
-            <!-- Verse display area (populated character by character dynamically) -->
-            <div id="verseContent" class="verse-content">
-                Loading next sacred scripture...
-            </div>
-            
-            <!-- Reference Tag -->
-            <div id="verseReference" class="verse-reference">
-                <span>— Loading reference</span>
-                <span class="translation-badge">KJV</span>
+            <!-- Scrollable body for long passages -->
+            <div class="parchment-body">
+                <!-- Verse display area (populated character by character dynamically) -->
+                <div id="verseContent" class="verse-content">
+                    Loading next sacred scripture...
+                </div>
+                
+                <!-- Reference Tag -->
+                <div id="verseReference" class="verse-reference">
+                    <span>— Loading reference</span>
+                    <span class="translation-badge">KJV</span>
+                </div>
             </div>
         </div>
 
