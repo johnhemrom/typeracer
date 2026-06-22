@@ -374,6 +374,7 @@ const customVerseInputEl = document.getElementById("customVerseInput");
 const fetchVerseBtnEl = document.getElementById("fetchVerseBtn");
 const fetchPassageBtnEl = document.getElementById("fetchPassageBtn");
 const startCustomBtnEl = document.getElementById("startCustomBtn");
+const nextVerseBtnEl = document.getElementById("nextVerseBtn");
 
 function initAudio() {
     if (!audioCtx) {
@@ -820,11 +821,13 @@ document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
         if (val === "CUSTOM") {
             customActionsBarEl.classList.add("visible");
             if (translationWrapperEl) translationWrapperEl.style.display = "none";
+            nextVerseBtnEl.classList.add("hidden");
             customVerseInputEl.focus();
             sectionOpenedAt = Date.now();
             return;
         }
         if (translationWrapperEl) translationWrapperEl.style.display = "";
+        nextVerseBtnEl.classList.remove("hidden");
         customActionsBarEl.classList.remove("visible");
         customInputAreaEl.classList.remove("visible");
         currentDifficulty = val;
@@ -841,6 +844,11 @@ translationFilterEl.addEventListener("change", (e) => {
     streak = 0;
     updateStreakDisplay();
     saveState();
+    loadVerse();
+    typingInputEl.focus();
+});
+
+nextVerseBtnEl.addEventListener("click", () => {
     loadVerse();
     typingInputEl.focus();
 });

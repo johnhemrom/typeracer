@@ -251,6 +251,13 @@ header {
     flex-direction: column;
     align-items: center;
     margin-bottom: 2px;
+    padding-right: 260px;
+}
+
+@media (max-width: 600px) {
+    .title-container {
+        padding-right: 0;
+    }
 }
 
 .main-title {
@@ -344,6 +351,34 @@ header {
         inset 0 -2px 4px rgba(255,255,255,0.1);
     position: relative;
     flex-shrink: 0;
+}
+
+.next-verse-btn {
+    background: var(--gold-accent);
+    border: 2px solid var(--leather-dark);
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--leather-dark);
+    transition: all 0.2s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.next-verse-btn:hover {
+    background: var(--leather-dark);
+    color: var(--gold-accent);
+    transform: scale(1.1);
+}
+
+.next-verse-btn.hidden {
+    display: none;
 }
 
 .difficulty-panel::before, .difficulty-panel::after {
