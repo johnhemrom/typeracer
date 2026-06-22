@@ -635,7 +635,7 @@ function loadVerse(selectedVerse = null) {
     liveAccuracyEl.innerHTML = `100<span class="stat-unit">%</span>`;
     liveTimerEl.textContent = "0:00";
 
-    customVerseSectionEl.classList.remove("visible");
+    customInputAreaEl.classList.remove("visible");
 
     currentVerse = selectedVerse || getFilteredVerse();
     currentVerseChars = currentVerse.text.split("");
