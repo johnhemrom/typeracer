@@ -355,6 +355,7 @@ const streakTextEl = document.getElementById("streakText");
 const soundBtnEl = document.getElementById("soundBtn");
 const themeBtnEl = document.getElementById("themeBtn");
 const translationFilterEl = document.getElementById("translationFilter");
+const translationWrapperEl = document.querySelector(".select-wrapper");
 const parchmentCardEl = document.getElementById("parchmentCard");
 const scrollInputContainerEl = document.getElementById("scrollInputContainer");
 
@@ -818,10 +819,12 @@ document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
         const val = e.target.value;
         if (val === "CUSTOM") {
             customActionsBarEl.classList.add("visible");
+            if (translationWrapperEl) translationWrapperEl.style.display = "none";
             customVerseInputEl.focus();
             sectionOpenedAt = Date.now();
             return;
         }
+        if (translationWrapperEl) translationWrapperEl.style.display = "";
         customActionsBarEl.classList.remove("visible");
         customInputAreaEl.classList.remove("visible");
         currentDifficulty = val;
