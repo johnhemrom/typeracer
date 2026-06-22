@@ -463,6 +463,9 @@ header {
 
 .parchment-body {
     width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
@@ -547,7 +550,8 @@ header {
 }
 
 .verse-reference {
-    margin-top: 25px;
+    margin-top: auto;
+    padding-top: 20px;
     font-family: var(--font-headings);
     font-weight: 700;
     font-size: 0.95rem;
@@ -555,6 +559,7 @@ header {
     letter-spacing: 2px;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     z-index: 2;
     text-transform: uppercase;

@@ -367,7 +367,6 @@ const blessingRefEl = document.getElementById("blessingRef");
 const tryAgainBtnEl = document.getElementById("tryAgainBtn");
 const newVerseBtnEl = document.getElementById("newVerseBtn");
 const appContainerEl = document.querySelector(".app-container");
-const customToggleBtnEl = document.getElementById("customToggleBtn");
 const customVerseSectionEl = document.getElementById("customVerseSection");
 const customVerseInputEl = document.getElementById("customVerseInput");
 const fetchVerseBtnEl = document.getElementById("fetchVerseBtn");
@@ -607,11 +606,11 @@ function getFilteredVerse() {
     }
 
     if (filtered.length === 0) {
-        filtered = BIBLE_VERSES.filter(v => v.difficulty === currentDifficulty);
+        filtered = [...BIBLE_VERSES];
     }
 
     const randomIndex = Math.floor(Math.random() * filtered.length);
-    return filtered[randomIndex];
+    return filtered[randomIndex] || BIBLE_VERSES[0];
 }
 
 function loadVerse(selectedVerse = null) {
@@ -807,7 +806,15 @@ parchmentCardEl.addEventListener("click", () => {
 
 document.querySelectorAll('input[name="difficulty"]').forEach(radio => {
     radio.addEventListener("change", (e) => {
-        currentDifficulty = e.target.value;
+        const val = e.target.value;
+        if (val === "CUSTOM") {
+            customVerseSectionEl.classList.add("visible");
+            customVerseInputEl.focus();
+            sectionOpenedAt = Date.now();
+            return;
+        }
+        customVerseSectionEl.classList.remove("visible");
+        currentDifficulty = val;
         streak = 0;
         updateStreakDisplay();
         saveState();
@@ -847,16 +854,6 @@ themeBtnEl.addEventListener("click", () => {
     themeBtnEl.textContent = THEME_ICONS[next] || "☀️";
     saveState();
     typingInputEl.focus();
-});
-
-customToggleBtnEl.addEventListener("click", () => {
-    customVerseSectionEl.classList.toggle("visible");
-    if (customVerseSectionEl.classList.contains("visible")) {
-        customVerseInputEl.focus();
-        sectionOpenedAt = Date.now();
-    } else {
-        typingInputEl.focus();
-    }
 });
 
 fetchVerseBtnEl.addEventListener("click", (e) => {
