@@ -76,6 +76,52 @@
             </svg>
         </header>
 
+        <!-- GAME MODE SELECTOR -->
+        <div class="mode-panel" role="radiogroup" aria-label="Game mode">
+            <div class="mode-options" id="modeOptions">
+                <label class="mode-chip">
+                    <input type="radio" name="gameMode" value="classic" checked>
+                    <span>📜 Classic</span>
+                </label>
+                <label class="mode-chip">
+                    <input type="radio" name="gameMode" value="timeTrial">
+                    <span>⏱️ Time Trial</span>
+                </label>
+                <label class="mode-chip">
+                    <input type="radio" name="gameMode" value="ghost">
+                    <span>👻 Ghost</span>
+                </label>
+                <label class="mode-chip">
+                    <input type="radio" name="gameMode" value="mannaRain">
+                    <span>🌧️ Manna Rain</span>
+                </label>
+                <label class="mode-chip">
+                    <input type="radio" name="gameMode" value="liveRace">
+                    <span>🏁 Live Race</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- MODE-SPECIFIC OPTIONS -->
+        <div id="modeOptionsStrip" class="mode-options-strip">
+            <div id="ttDurationStrip" class="mode-strip hidden">
+                <span class="strip-label">Duration</span>
+                <button type="button" class="duration-chip" data-duration="30">30s</button>
+                <button type="button" class="duration-chip active" data-duration="60">60s</button>
+                <button type="button" class="duration-chip" data-duration="90">90s</button>
+            </div>
+            <div id="ghostInfoStrip" class="mode-strip hidden">
+                <span id="ghostInfoText" class="strip-info">No shadow yet — set your first mark.</span>
+            </div>
+            <div id="mannaInfoStrip" class="mode-strip hidden">
+                <span class="strip-info">Type falling words before they touch the earth.</span>
+            </div>
+            <div id="liveInfoStrip" class="mode-strip hidden">
+                <span class="strip-info">Race friends with a room code — no account needed.</span>
+                <button type="button" id="liveOpenLobbyBtn" class="duration-chip">Open Lobby</button>
+            </div>
+        </div>
+
         <!-- DIFFICULTY SELECTOR PANEL -->
         <div class="difficulty-panel">
             <div class="difficulty-options">
@@ -115,6 +161,29 @@
             <button id="startCustomBtn" class="btn btn-primary" style="padding:8px 20px;font-size:0.8rem">✍️ Type Custom</button>
         </div>
 
+        <!-- GHOST RACE TRACK -->
+        <div id="ghostRaceTrack" class="ghost-race-track hidden" aria-hidden="true">
+            <div class="race-row">
+                <span class="race-label you">You</span>
+                <div class="race-bar-track"><div id="youProgressBar" class="race-bar you-bar"></div></div>
+                <span id="youProgressPct" class="race-pct">0%</span>
+            </div>
+            <div class="race-row">
+                <span class="race-label ghost">Ghost</span>
+                <div class="race-bar-track"><div id="ghostProgressBar" class="race-bar ghost-bar"></div></div>
+                <span id="ghostProgressPct" class="race-pct">0%</span>
+            </div>
+        </div>
+
+        <!-- LIVE RACE PEER TRACK -->
+        <div id="livePeerTrack" class="ghost-race-track live-peer-track hidden" aria-hidden="true" aria-label="Live race progress">
+        </div>
+
+        <!-- COUNTDOWN OVERLAY -->
+        <div id="countdownOverlay" class="countdown-overlay hidden" aria-live="assertive">
+            <span id="countdownNumber" class="countdown-number">3</span>
+        </div>
+
         <!-- TYPING PARCHMENT VERSE CARD -->
         <div id="parchmentCard" class="parchment-card">
             <!-- Inline Faint Dove Watermark behind text -->
@@ -124,9 +193,19 @@
             
             <!-- Scrollable body for long passages -->
             <div class="parchment-body">
-                <!-- Verse display area (populated character by character dynamically) -->
+                <!-- Classic / Time Trial / Ghost verse display -->
                 <div id="verseContent" class="verse-content">
                     Loading next sacred scripture...
+                </div>
+
+                <!-- Manna Rain playfield (hidden outside manna mode) -->
+                <div id="mannaPlayfield" class="manna-playfield hidden" aria-label="Falling words playfield">
+                    <div id="mannaWordsLayer" class="manna-words-layer"></div>
+                    <div class="manna-ground"></div>
+                    <div id="mannaHud" class="manna-hud">
+                        <span id="mannaLives">❤❤❤</span>
+                        <span id="mannaWordsLeft">0 words</span>
+                    </div>
                 </div>
                 
                 <!-- Reference Tag -->
@@ -146,21 +225,24 @@
             <div class="scroll-roller right"></div>
         </div>
 
-        <!-- LIVE STATS BAR -->
+        <!-- LIVE STATS BAR (slot labels updated per mode) -->
         <div class="stats-bar" role="status" aria-live="polite" aria-label="Live typing statistics">
             <div class="stat-stamp">
-                <span class="stat-label">WPM</span>
+                <span id="statLabelLeft" class="stat-label">WPM</span>
                 <span id="liveWpm" class="stat-value">0</span>
             </div>
             <div class="stat-stamp">
-                <span class="stat-label">Accuracy</span>
+                <span id="statLabelMid" class="stat-label">Accuracy</span>
                 <span id="liveAccuracy" class="stat-value">100<span class="stat-unit">%</span></span>
             </div>
             <div class="stat-stamp">
-                <span class="stat-label">Timer</span>
+                <span id="statLabelRight" class="stat-label">Timer</span>
                 <span id="liveTimer" class="stat-value">0:00</span>
             </div>
         </div>
+
+        <!-- Mid-run toast (Time Trial verse clears) -->
+        <div id="modeToast" class="mode-toast" aria-live="polite"></div>
 
         <!-- STREAK COUNTER BADGE -->
         <div class="streak-container">
@@ -198,10 +280,98 @@
             </div>
         </div>
 
+        <!-- LIVE RACE LOBBY OVERLAY -->
+        <div id="liveLobbyOverlay" class="modal-overlay live-lobby-overlay" role="dialog" aria-modal="true" aria-labelledby="liveLobbyTitle">
+            <div class="live-lobby-panel">
+                <h3 id="liveLobbyTitle">🏁 Live Room Race</h3>
+                <p class="live-lobby-sub">No accounts — share a code and race the same Scripture.</p>
+
+                <div id="liveLobbyGate" class="live-lobby-section">
+                    <label class="live-field">
+                        <span>Display name</span>
+                        <input type="text" id="liveNameInput" maxlength="16" placeholder="Pilgrim-1234" autocomplete="nickname">
+                    </label>
+                    <div class="live-gate-actions">
+                        <button type="button" id="liveCreateBtn" class="btn btn-primary">Create Room</button>
+                    </div>
+                    <div class="live-join-row">
+                        <input type="text" id="liveCodeInput" maxlength="6" placeholder="Room code" autocomplete="off" class="live-code-input">
+                        <button type="button" id="liveJoinBtn" class="btn btn-secondary">Join</button>
+                    </div>
+                    <p id="liveLobbyStatus" class="live-status" aria-live="polite"></p>
+                </div>
+
+                <div id="liveLobbyRoom" class="live-lobby-section hidden">
+                    <div class="live-code-row">
+                        <span class="live-code-label">Room</span>
+                        <strong id="liveRoomCode" class="live-room-code">----</strong>
+                        <button type="button" id="liveCopyCodeBtn" class="duration-chip" title="Copy code">Copy</button>
+                        <button type="button" id="liveCopyLinkBtn" class="duration-chip" title="Copy invite link">Invite link</button>
+                    </div>
+
+                    <div id="liveHostSettings" class="live-host-settings">
+                        <label class="live-field inline">
+                            <span>Mode</span>
+                            <select id="liveModeSelect">
+                                <option value="classic">Classic</option>
+                                <option value="timeTrial">Time Trial</option>
+                            </select>
+                        </label>
+                        <label class="live-field inline">
+                            <span>Difficulty</span>
+                            <select id="liveDiffSelect">
+                                <option value="EASY">Easy</option>
+                                <option value="MEDIUM" selected>Medium</option>
+                                <option value="HARD">Hard</option>
+                            </select>
+                        </label>
+                        <label class="live-field inline" id="liveDurationField">
+                            <span>Duration</span>
+                            <select id="liveDurationSelect">
+                                <option value="30">30s</option>
+                                <option value="60" selected>60s</option>
+                                <option value="90">90s</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="live-roster-wrap">
+                        <span class="strip-label">Roster</span>
+                        <ul id="liveRosterList" class="live-roster"></ul>
+                    </div>
+
+                    <div class="live-room-actions">
+                        <button type="button" id="liveReadyBtn" class="btn btn-secondary">Ready</button>
+                        <button type="button" id="liveStartBtn" class="btn btn-primary hidden">Start Race</button>
+                        <button type="button" id="liveLeaveBtn" class="btn btn-secondary">Leave</button>
+                    </div>
+                    <p id="liveRoomHint" class="live-status"></p>
+                </div>
+
+                <div id="liveResultsSection" class="live-lobby-section hidden">
+                    <h4 class="live-results-title">Podium</h4>
+                    <ol id="liveResultsList" class="live-results"></ol>
+                    <div class="live-room-actions">
+                        <button type="button" id="liveRematchBtn" class="btn btn-primary hidden">Play Again</button>
+                        <button type="button" id="liveResultsLeaveBtn" class="btn btn-secondary">Leave</button>
+                    </div>
+                </div>
+
+                <button type="button" id="liveLobbyCloseBtn" class="btn btn-secondary live-close-btn">Close</button>
+            </div>
+        </div>
+
         <!-- LEADERBOARD OVERLAY -->
         <div id="leaderboardOverlay" class="modal-overlay leaderboard-overlay" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
             <div class="leaderboard-panel">
                 <h3 id="leaderboardTitle">🏆 High Scores</h3>
+                <div class="leaderboard-mode-tabs" id="lbModeTabs">
+                    <button class="lb-mode-tab active" data-mode="classic">Classic</button>
+                    <button class="lb-mode-tab" data-mode="timeTrial">Time Trial</button>
+                    <button class="lb-mode-tab" data-mode="ghost">Ghost</button>
+                    <button class="lb-mode-tab" data-mode="mannaRain">Manna</button>
+                    <button class="lb-mode-tab" data-mode="liveRace">Live</button>
+                </div>
                 <div class="leaderboard-tabs">
                     <button class="lb-tab active" data-diff="EASY">Easy</button>
                     <button class="lb-tab" data-diff="MEDIUM">Medium</button>
@@ -241,18 +411,18 @@
                 </div>
             </div>
 
-            <!-- Stats Results Grid -->
+            <!-- Stats Results Grid (labels set per mode) -->
             <div class="modal-stats-table">
                 <div class="modal-stat-box">
-                    <span class="box-label">Final WPM</span>
+                    <span id="modalLabelLeft" class="box-label">Final WPM</span>
                     <span id="modalWpm" class="box-value">0</span>
                 </div>
                 <div class="modal-stat-box">
-                    <span class="box-label">Accuracy</span>
+                    <span id="modalLabelMid" class="box-label">Accuracy</span>
                     <span id="modalAccuracy" class="box-value">100%</span>
                 </div>
                 <div class="modal-stat-box">
-                    <span class="box-label">Time Taken</span>
+                    <span id="modalLabelRight" class="box-label">Time Taken</span>
                     <span id="modalTime" class="box-value">0s</span>
                 </div>
             </div>
