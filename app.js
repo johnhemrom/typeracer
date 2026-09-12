@@ -292,8 +292,8 @@ const BIBLE_REFERENCES = [
     { book: "1 John", chapter: 4, verse: 19 },
 ];
 
-const THEMES = ["sepia", "dark", ""];
-const THEME_ICONS = { sepia: "🕯️", dark: "🌙", "": "☀️" };
+const THEMES = ["sepia", "", "dark", "ocean", "forest"];
+const THEME_ICONS = { sepia: "🕯️", dark: "🌙", ocean: "🌊", forest: "🌿", "": "☀️" };
 
 const GAME_MODES = ["classic", "timeTrial", "ghost", "mannaRain", "liveRace"];
 const MODE_LABELS = {
@@ -408,6 +408,8 @@ const streakBadgeEl = document.getElementById("streakBadge");
 const streakTextEl = document.getElementById("streakText");
 const soundBtnEl = document.getElementById("soundBtn");
 const themeBtnEl = document.getElementById("themeBtn");
+const themeMenuEl = document.getElementById("themeMenu");
+const themeOptionEls = document.querySelectorAll(".theme-option");
 const translationFilterEl = document.getElementById("translationFilter");
 const translationWrapperEl = document.querySelector(".select-wrapper");
 const parchmentCardEl = document.getElementById("parchmentCard");
@@ -1818,14 +1820,47 @@ soundBtnEl.addEventListener("click", () => {
     typingInputEl.focus();
 });
 
-themeBtnEl.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme") || "";
-    const idx = THEMES.indexOf(current);
-    const next = THEMES[(idx + 1) % THEMES.length];
-    document.documentElement.setAttribute("data-theme", next);
-    themeBtnEl.textContent = THEME_ICONS[next] || "☀️";
+function setTheme(theme) {
+    const selectedTheme = THEMES.includes(theme) ? theme : "sepia";
+    document.documentElement.setAttribute("data-theme", selectedTheme);
+    themeBtnEl.textContent = THEME_ICONS[selectedTheme] || "☀️";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", {
+        sepia: "#F3E5C8", dark: "#16100C", ocean: "#95C9D0", forest: "#AAB891", "": "#F3E5C8"
+    }[selectedTheme]);
+    themeOptionEls.forEach((option) => {
+        option.setAttribute("aria-checked", option.dataset.theme === selectedTheme ? "true" : "false");
+    });
     saveState();
-    typingInputEl.focus();
+}
+
+function closeThemeMenu() {
+    themeMenuEl.classList.add("hidden");
+    themeBtnEl.setAttribute("aria-expanded", "false");
+}
+
+themeBtnEl.addEventListener("click", () => {
+    const isOpen = !themeMenuEl.classList.contains("hidden");
+    themeMenuEl.classList.toggle("hidden", isOpen);
+    themeBtnEl.setAttribute("aria-expanded", String(!isOpen));
+});
+
+themeOptionEls.forEach((option) => {
+    option.addEventListener("click", () => {
+        setTheme(option.dataset.theme || "");
+        closeThemeMenu();
+        typingInputEl.focus();
+    });
+});
+
+document.addEventListener("click", (event) => {
+    if (!event.target.closest(".theme-picker")) closeThemeMenu();
+});
+
+window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !themeMenuEl.classList.contains("hidden")) {
+        closeThemeMenu();
+        themeBtnEl.focus();
+    }
 });
 
 fetchVerseBtnEl.addEventListener("click", (e) => {
@@ -2888,8 +2923,8 @@ window.onload = () => {
         soundBtnEl.title = "Unmute clicking sounds";
     }
 
-    const currentTheme = document.documentElement.getAttribute("data-theme") || "";
-    themeBtnEl.textContent = THEME_ICONS[currentTheme] || "☀️";
+    const currentTheme = document.documentElement.getAttribute("data-theme") || "sepia";
+    setTheme(currentTheme);
 
     updateStreakDisplay();
     applyModeChrome();

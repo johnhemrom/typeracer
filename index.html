@@ -38,8 +38,18 @@
                     </svg>
                 </button>
 
-                <!-- Theme Toggle -->
-                <button id="themeBtn" class="theme-btn" title="Toggle theme (Sepia / Dark / Light)" aria-label="Toggle theme">🕯️</button>
+                <!-- Theme Picker -->
+                <div class="theme-picker">
+                    <button id="themeBtn" class="theme-btn" title="Choose a color theme" aria-label="Choose a color theme" aria-expanded="false" aria-controls="themeMenu">🕯️</button>
+                    <div id="themeMenu" class="theme-menu hidden" role="menu" aria-label="Color themes">
+                        <p class="theme-menu-title">Color theme</p>
+                        <button type="button" class="theme-option" data-theme="sepia" role="menuitemradio" aria-checked="true"><span class="theme-swatch sepia"></span>Sepia</button>
+                        <button type="button" class="theme-option" data-theme="" role="menuitemradio" aria-checked="false"><span class="theme-swatch light"></span>Light</button>
+                        <button type="button" class="theme-option" data-theme="dark" role="menuitemradio" aria-checked="false"><span class="theme-swatch dark"></span>Midnight</button>
+                        <button type="button" class="theme-option" data-theme="ocean" role="menuitemradio" aria-checked="false"><span class="theme-swatch ocean"></span>Ocean</button>
+                        <button type="button" class="theme-option" data-theme="forest" role="menuitemradio" aria-checked="false"><span class="theme-swatch forest"></span>Forest</button>
+                    </div>
+                </div>
 
                 <!-- Leaderboard Toggle -->
                 <button id="leaderboardBtn" class="theme-btn" title="View high scores" aria-label="Leaderboard">🏆</button>
